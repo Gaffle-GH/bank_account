@@ -7,12 +7,11 @@ using namespace std;
 
 int main(){
     string name;
-
-    cout << endl;
+    clearScreen();
+    
     cout << "Account Program:" << endl;
     cout << "Insert Name for the Account: "; 
     cin >> name;
-    cout << endl;
 
     account user(name, 0);
 
@@ -28,8 +27,3 @@ int main(){
     user.display();
     return 0;
 }
-
-
-
-
-
