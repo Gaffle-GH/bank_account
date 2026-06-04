@@ -24,14 +24,5 @@ make run
 ```bash
 make clean
 ```
-## Others: 
-
-| # | Other Projects |
-|:---:|:---|
-| 1 | | 
-| 2 | | 
-| 3 | | 
-| 4 | |  
-| 5 | |
 
 
