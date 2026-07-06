@@ -1,0 +1,17 @@
+[
+  {
+    "directory": "/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main",
+    "command": "g++ -Wall -Wextra -std=c++17 -I/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main/include -c src/account.cc",
+    "file": "src/account.cc"
+  },
+  {
+    "directory": "/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main",
+    "command": "g++ -Wall -Wextra -std=c++17 -I/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main/include -c src/main.cc",
+    "file": "src/main.cc"
+  },
+  {
+    "directory": "/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main",
+    "command": "g++ -Wall -Wextra -std=c++17 -I/Users/gaffle/Documents/programming/GITHUB Personal Projects/bank_account-main/include -I/opt/homebrew/include -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_THREAD_SAFE -D_REENTRANT -c src/gui_main.cc",
+    "file": "src/gui_main.cc"
+  }
+]

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" class="login-active">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Program</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="login-active">
+  <div id="login-screen" class="page">
+    <article class="receipt">
+      <header class="receipt-head">
+        <p class="store">ACCOUNT PROGRAM</p>
+        <p class="tagline">Client access terminal</p>
+        <p class="receipt-code">TERMINAL 04  /  SESSION OPEN</p>
+      </header>
+      <hr class="rule" />
+
+      <p class="section-title">New session</p>
+      <label class="label" for="login-name">Insert Name for the Account</label>
+      <input id="login-name" type="text" value="exampleAccount" autofocus />
+      <button id="login-btn" class="btn">Continue</button>
+      <p id="login-status" class="status"></p>
+
+      <footer class="receipt-foot">
+        <p>Retain for your records</p>
+      </footer>
+    </article>
+  </div>
+
+  <div id="app-screen" class="page hidden">
+    <article class="receipt">
+      <header class="receipt-head">
+        <p class="store">ACCOUNT PROGRAM</p>
+        <p class="tagline">Transaction receipt</p>
+        <p class="receipt-code">BANK LEDGER  /  LIVE ACCOUNT</p>
+      </header>
+      <hr class="rule" />
+
+      <p id="account-title" class="line center">Account Display</p>
+      <p id="subtitle" class="line center muted"></p>
+      <hr class="rule" />
+
+      <div class="row total">
+        <span>Current Balance</span>
+        <strong id="balance">$0.00</strong>
+      </div>
+      <hr class="rule" />
+
+      <p class="section-title">Options</p>
+      <label class="label" for="amount">Enter Amount</label>
+      <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+
+      <div class="btn-group">
+        <button id="deposit-btn" class="btn">1. Deposit</button>
+        <button id="withdraw-btn" class="btn outline">2. Withdraw</button>
+      </div>
+
+      <hr class="rule" />
+      <p class="section-title">3. History</p>
+      <ul id="history" class="history"></ul>
+
+      <hr class="rule" />
+      <button id="save-exit-btn" class="btn">4. Save and Exit</button>
+
+      <footer class="receipt-foot">
+        <p>Thank you for banking with us</p>
+        <p class="muted">*** END OF RECEIPT ***</p>
+      </footer>
+    </article>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

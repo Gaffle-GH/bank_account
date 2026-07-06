@@ -1,0 +1,383 @@
+/* Smooth receipt-style UI */
+
+:root {
+  --app-width: 365px;
+  --app-height: 880px;
+  --login-width: 360px;
+  --login-height: 110px;
+  --paper: #fffaf1;
+  --paper-shadow: rgba(50, 34, 16, 0.14);
+  --paper-edge: #e8dfcf;
+  --ink: #191713;
+  --muted: #786f63;
+  --dash: #d3c8b7;
+  --bg: linear-gradient(180deg, #ebe5d8 0%, #ddd4c5 100%);
+  --accent: #8a2d1b;
+  --accent-soft: rgba(138, 45, 27, 0.1);
+  --credit: #1f6a3f;
+  --debit: #9a2c2c;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  width: var(--app-width);
+  height: var(--app-height);
+  overflow: hidden;
+}
+
+html.login-active {
+  width: var(--login-width);
+  height: var(--login-height);
+}
+
+body {
+  font-family: "IBM Plex Mono", "Courier New", Courier, ui-monospace, monospace;
+  background: var(--paper);
+  color: var(--ink);
+  width: var(--app-width);
+  height: var(--app-height);
+  margin: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.login-active {
+  width: var(--login-width);
+  height: var(--login-height);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.page {
+  width: var(--app-width);
+  height: var(--app-height);
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#login-screen.page {
+  width: var(--login-width);
+  height: var(--login-height);
+}
+
+#login-screen .receipt {
+  width: var(--login-width);
+  padding: 8px 12px 10px;
+  box-shadow: none;
+  border-radius: 0;
+  animation: none;
+}
+
+#login-screen .receipt::before,
+#login-screen .receipt::after,
+#login-screen .tagline,
+#login-screen .receipt-code,
+#login-screen .section-title,
+#login-screen .rule,
+#login-screen .receipt-foot {
+  display: none;
+}
+
+#login-screen .store {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+#login-screen .label {
+  font-size: 0.62rem;
+  margin-bottom: 3px;
+}
+
+#login-screen input {
+  padding: 5px 8px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+#login-screen .btn {
+  padding: 5px 10px;
+  font-size: 0.72rem;
+}
+
+#login-screen .status {
+  margin-top: 4px;
+  font-size: 0.62rem;
+  line-height: 1.2;
+}
+
+.receipt {
+  width: var(--app-width);
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffdf8 0%, var(--paper) 100%);
+  padding: 30px 24px 0;
+  box-shadow: none;
+  position: relative;
+  border-radius: 0;
+  animation: receiptIn 0.42s cubic-bezier(.2,.8,.2,1);
+}
+
+.receipt::before {
+  display: none;
+}
+
+.receipt::after {
+  display: none;
+}
+
+@keyframes receiptIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(0.35deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.receipt-head {
+  text-align: center;
+}
+
+.store {
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.tagline,
+.receipt-code {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.tagline {
+  margin-top: 5px;
+}
+
+.receipt-code {
+  margin-top: 6px;
+}
+
+.rule {
+  display: none;
+}
+
+.section-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.line {
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.82rem;
+}
+
+.row.total {
+  margin-bottom: 10px;
+}
+
+.row.total strong {
+  font-size: 1.22rem;
+  letter-spacing: 0.02em;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  background: rgba(255,255,255,0.88);
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  outline: none;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+input:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.btn-group {
+  display: grid;
+  gap: 8px;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+  transition: transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.92;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn.outline {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--ink);
+}
+
+#app-screen .receipt-foot {
+  flex-shrink: 0;
+}
+
+#app-screen .receipt > *:not(.history) {
+  flex-shrink: 0;
+}
+
+#app-screen .history {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding-right: 4px;
+}
+
+.history {
+  list-style: none;
+}
+
+.history li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 9px 0;
+  font-size: 0.78rem;
+}
+
+.history .desc {
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.history .amt {
+  white-space: nowrap;
+  font-weight: 700;
+  text-align: right;
+}
+
+.history .amt.credit {
+  color: var(--credit);
+}
+
+.history .amt.debit {
+  color: var(--debit);
+}
+
+.history .empty {
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.history li.history-new {
+  animation: historyFlash 1.4s ease;
+}
+
+@keyframes historyFlash {
+  0% {
+    background: rgba(31, 106, 63, 0.18);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+#balance.balance-updated {
+  animation: balancePulse 0.8s ease;
+}
+
+@keyframes balancePulse {
+  0% {
+    color: var(--credit);
+    transform: scale(1.06);
+  }
+  100% {
+    color: var(--ink);
+    transform: scale(1);
+  }
+}
+
+.receipt-foot {
+  text-align: center;
+  padding: 8px 0 24px;
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
+.receipt-foot .muted {
+  margin-top: 3px;
+  letter-spacing: 0.08em;
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.status.err {
+  color: var(--debit);
+}

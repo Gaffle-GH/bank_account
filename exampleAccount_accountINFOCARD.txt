@@ -1,7 +1,7 @@
 Account Info: 
 --------------------
 Account Name: exampleAccount
-Current Balance: $11
+Current Balance: $5.5
 
 Action History: 
 Deposit: +$100.00
@@ -20,5 +20,16 @@ Deposit: +$1.00
 Deposit: +$1.00
 Deposit: +$2.00
 Withdraw: -$2.00
+Deposit: +$5.50
+Deposit: +$3.00
+Deposit: +$200.00
+Withdraw: -$200.00
+Deposit: +$2.00
+Deposit: +$2.00
+Deposit: +$2.00
+Deposit: +$20.00
+Deposit: +$20.00
+Withdraw: -$30.00
+Withdraw: -$30.00
 
 ##END OF TRANSCRIPT##
