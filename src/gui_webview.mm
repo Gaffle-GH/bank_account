@@ -66,7 +66,7 @@
 @implementation AppDelegate
 
 static constexpr CGFloat kLoginWidth = 360;
-static constexpr CGFloat kLoginHeight = 110;
+static constexpr CGFloat kLoginHeight = 190;
 
 - (void)setLockedContentSize:(NSSize)size
 {

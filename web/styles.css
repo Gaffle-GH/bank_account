@@ -4,7 +4,7 @@
   --app-width: 365px;
   --app-height: 880px;
   --login-width: 360px;
-  --login-height: 110px;
+  --login-height: 190px;
   --paper: #fffaf1;
   --paper-shadow: rgba(50, 34, 16, 0.14);
   --paper-edge: #e8dfcf;
@@ -190,6 +190,12 @@ body.login-active {
 .line {
   font-size: 0.82rem;
   line-height: 1.6;
+}
+
+.file-path {
+  font-size: 0.66rem;
+  word-break: break-all;
+  margin-top: 2px;
 }
 
 .center {

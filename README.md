@@ -46,8 +46,16 @@ tag is pushed.
 
 | Platform | Application | UI |
 |----------|-------------|-----|
-| **macOS** | `BankAccount` | WebKit window (embedded HTML/CSS) |
+| **macOS** | `BankAccount.app` | WebKit window (embedded HTML/CSS) |
 | **Windows** | `BankAccount.exe` | FLTK receipt-style window |
+
+Both open as a normal windowed app — **no terminal/console window appears**.
+On macOS the release is packaged as a double-clickable `.app` bundle; on Windows
+the executable is built for the GUI subsystem (`-mwindows`).
+
+On the login screen you can set the **Save/Load folder** for the account file
+(`NAME_accountINFOCARD.txt`). Leave it blank to use your Home folder; `~` is
+expanded, and the folder is created if it doesn't exist.
 
 Editing the UI: change the files in `web/` and rebuild — they are re-embedded
 into the executable automatically.

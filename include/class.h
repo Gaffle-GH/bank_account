@@ -19,6 +19,12 @@ public:
     double getBalance() const;
     const vector<string>& getHistory() const;
 
+    // Folder where the account file is read from / written to.
+    // Empty means the current working directory.
+    void setDataDir(const string& dir);
+    string getDataDir() const;
+    string getFilePath() const;
+
     bool deposit(double amount);
     bool withdraw(double amount, string& errorMsg);
 
@@ -36,6 +42,7 @@ private:
     string name;
     double currentbal;
     vector<string> history;
+    string dataDir;
 };
 
 void clearScreen();

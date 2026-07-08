@@ -50,7 +50,8 @@ GUI_EXTRA_LDFLAGS = $(FLTK_LDFLAGS)
 endif
 
 ifeq ($(OS),Windows_NT)
-GUI_EXTRA_LDFLAGS += -lws2_32
+# -mwindows builds a GUI-subsystem app so no console window pops up.
+GUI_EXTRA_LDFLAGS += -lws2_32 -mwindows
 WEB_LDFLAGS = -lws2_32
 else
 WEB_LDFLAGS =

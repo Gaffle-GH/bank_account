@@ -1,6 +1,7 @@
 #include "class.h"
 
 #include <algorithm>
+#include <filesystem>
 
 account::account(string name, double currentbal) : name(name), currentbal(currentbal) {}
 
@@ -9,6 +10,20 @@ string account::getName() const { return name; }
 double account::getBalance() const { return currentbal; }
 
 const vector<string>& account::getHistory() const { return history; }
+
+void account::setDataDir(const string& dir) { dataDir = dir; }
+
+string account::getDataDir() const { return dataDir; }
+
+string account::getFilePath() const
+{
+    const string fileName = name + "_accountINFOCARD.txt";
+    if (dataDir.empty())
+    {
+        return fileName;
+    }
+    return (std::filesystem::path(dataDir) / fileName).string();
+}
 
 void clearScreen()
 {
@@ -25,7 +40,14 @@ string trim(const string& str)
 
 bool account::saveFile()
 {
-    ofstream file(name + "_accountINFOCARD.txt");
+    if (!dataDir.empty())
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(dataDir, ec);
+    }
+
+    const string path = getFilePath();
+    ofstream file(path);
     if (!file.is_open())
     {
         cout << "Error: Unable to Save File" << endl;
@@ -51,13 +73,13 @@ bool account::saveFile()
     file << "##END OF TRANSCRIPT##" << endl;
     file.close();
 
-    cout << "Account Information Saved to " << name << "_accountINFOCARD.txt" << endl;
+    cout << "Account Information Saved to " << path << endl;
     return true;
 }
 
 bool account::loadFile()
 {
-    ifstream file(name + "_accountINFOCARD.txt");
+    ifstream file(getFilePath());
     if (!file.is_open())
     {
         return false;

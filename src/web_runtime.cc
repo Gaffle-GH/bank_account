@@ -4,6 +4,7 @@
 #include "web_assets.h"
 
 #include <atomic>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -27,6 +28,46 @@ bool fileExists(const string& path)
 {
     ifstream file(path);
     return file.good();
+}
+
+string homeDir()
+{
+#ifdef _WIN32
+    const char* profile = getenv("USERPROFILE");
+    if (profile != nullptr && profile[0] != '\0')
+    {
+        return profile;
+    }
+    const char* drive = getenv("HOMEDRIVE");
+    const char* path = getenv("HOMEPATH");
+    if (drive != nullptr && path != nullptr)
+    {
+        return string(drive) + path;
+    }
+#else
+    const char* home = getenv("HOME");
+    if (home != nullptr && home[0] != '\0')
+    {
+        return home;
+    }
+#endif
+    return ".";
+}
+
+// Expands a leading "~" to the user's home directory and, when no folder is
+// given, defaults to the home directory so the app works even when launched by
+// double-clicking (where the working directory may not be writable).
+string resolveDataDir(string dir)
+{
+    if (dir.empty())
+    {
+        return homeDir();
+    }
+    if (dir[0] == '~' && (dir.size() == 1 || dir[1] == '/' || dir[1] == '\\'))
+    {
+        return homeDir() + dir.substr(1);
+    }
+    return dir;
 }
 
 string readFile(const string& path)
@@ -139,6 +180,7 @@ string accountJson(bool loaded)
     json << fixed << setprecision(2);
     json << "{\"name\":\"" << jsonEscape(activeAccount->getName()) << "\""
          << ",\"balance\":" << activeAccount->getBalance() << ",\"loaded\":" << (loaded ? "true" : "false")
+         << ",\"path\":\"" << jsonEscape(activeAccount->getFilePath()) << "\""
          << ",\"history\":[";
     const vector<string>& history = activeAccount->getHistory();
     for (size_t i = 0; i < history.size(); ++i)
@@ -226,6 +268,7 @@ string handleRequest(const string& method, const string& path, const string& bod
         }
 
         activeAccount = make_unique<account>(name, 0);
+        activeAccount->setDataDir(resolveDataDir(extractJsonString(body, "dir")));
         bool loaded = activeAccount->loadFile();
         return httpResponse(200, "OK", accountJson(loaded), "application/json");
     }
@@ -271,7 +314,7 @@ string handleRequest(const string& method, const string& path, const string& bod
         {
             return httpResponse(500, "Server Error", "{\"error\":\"Save failed\"}", "application/json");
         }
-        string msg = "Saved to " + activeAccount->getName() + "_accountINFOCARD.txt";
+        string msg = "Saved to " + activeAccount->getFilePath();
         ostringstream json;
         json << "{\"message\":\"" << jsonEscape(msg) << "\"}";
         return httpResponse(200, "OK", json.str(), "application/json");

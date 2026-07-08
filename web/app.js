@@ -16,7 +16,7 @@ function setViewport(mode) {
   document.body.classList.toggle("login-active", isLogin);
   if (window.webkit?.messageHandlers?.native) {
     window.webkit.messageHandlers.native.postMessage(
-      isLogin ? "resize:360,110" : "resize:365,880"
+      isLogin ? "resize:360,190" : "resize:365,880"
     );
   }
 }
@@ -48,6 +48,11 @@ function renderAccount(data, options = {}) {
   document.getElementById("subtitle").textContent = data.loaded
     ? "File Found... Loaded Existing Account Information."
     : "No Existing Information found. Creating New Account...";
+
+  const filePathEl = document.getElementById("file-path");
+  if (filePathEl && data.path) {
+    filePathEl.textContent = "File: " + data.path;
+  }
 
   if (previousBalance !== balanceEl.textContent) {
     balanceEl.classList.remove("balance-updated");
@@ -99,6 +104,7 @@ async function refresh() {
 async function doLogin() {
   const nameInput = document.getElementById("login-name");
   const name = nameInput.value.trim();
+  const dir = document.getElementById("login-dir").value.trim();
   const loginStatus = document.getElementById("login-status");
   if (!name) {
     loginStatus.textContent = "Name is required";
@@ -109,7 +115,7 @@ async function doLogin() {
   try {
     const data = await api("/api/open", {
       method: "POST",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, dir }),
     });
     showApp();
     renderAccount(data);
@@ -123,6 +129,12 @@ async function doLogin() {
 document.getElementById("login-btn").addEventListener("click", doLogin);
 
 document.getElementById("login-name").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    doLogin();
+  }
+});
+
+document.getElementById("login-dir").addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     doLogin();
   }

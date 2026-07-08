@@ -19,6 +19,8 @@
       <p class="section-title">New session</p>
       <label class="label" for="login-name">Insert Name for the Account</label>
       <input id="login-name" type="text" value="exampleAccount" autofocus />
+      <label class="label" for="login-dir">Save/Load Folder (blank = Home folder)</label>
+      <input id="login-dir" type="text" inputmode="text" placeholder="~/Documents" autocomplete="off" />
       <button id="login-btn" class="btn">Continue</button>
       <p id="login-status" class="status"></p>
 
@@ -39,6 +41,7 @@
 
       <p id="account-title" class="line center">Account Display</p>
       <p id="subtitle" class="line center muted"></p>
+      <p id="file-path" class="line center muted file-path"></p>
       <hr class="rule" />
 
       <div class="row total">
