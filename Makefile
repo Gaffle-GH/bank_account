@@ -19,9 +19,6 @@ WEB_SRC = src/web_server.cc
 UNAME_S := $(shell uname -s 2>/dev/null)
 
 FLTK_CONFIG ?= fltk-config
-ifeq ($(OS),Windows_NT)
-FLTK_CONFIG := /mingw64/bin/fltk-config
-endif
 ifeq ($(UNAME_S),Darwin)
 FLTK_CONFIG := /opt/homebrew/opt/fltk/bin/fltk-config
 endif

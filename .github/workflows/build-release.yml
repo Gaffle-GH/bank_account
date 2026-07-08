@@ -19,7 +19,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build
         run: make all
@@ -31,7 +31,7 @@ jobs:
           bash scripts/package-release.sh macos "$VERSION"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bank-account-macos
           path: dist/*.zip
@@ -43,22 +43,20 @@ jobs:
         shell: msys2 {0}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
-          msys2_location: C:\msys64
+          msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-fltk
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-fltk
             make
 
       - name: Build
-        run: |
-          export FLTK_CONFIG=/mingw64/bin/fltk-config
-          make all RELEASE=1
+        run: make all RELEASE=1
 
       - name: Package
         shell: pwsh
@@ -67,7 +65,7 @@ jobs:
           ./scripts/package-release.ps1 windows $version
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bank-account-windows
           path: dist/*.zip
@@ -78,13 +76,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download macOS build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: bank-account-macos
           path: dist
 
       - name: Download Windows build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: bank-account-windows
           path: dist
