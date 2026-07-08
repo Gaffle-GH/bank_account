@@ -15,67 +15,52 @@
 
 ### Build / Run / Clean:
 
-**Release packages** (Mac + Windows zip files for GitHub Releases):
+The project compiles to **one self-contained application** — a native desktop
+window with the web UI (`web/index.html`, `web/styles.css`, `web/app.js`)
+embedded directly into the executable. There are no extra files to ship
+alongside it.
+
+```bash
+make          # build the single app -> bin/BankAccount
+make run      # build and launch it
+```
+
+**Release packages** (a single-file Mac + Windows zip for GitHub Releases):
 
 ```bash
 # macOS (build locally)
-make all
+make app
 bash scripts/package-release.sh macos v1.0.0
-# -> dist/bank-account-macos-v1.0.0.zip
+# -> dist/bank-account-macos-v1.0.0.zip  (contains just BankAccount)
 
-# Windows (MSYS2 MinGW shell)
-export FLTK_CONFIG=/mingw64/bin/fltk-config
-make all RELEASE=1
+# Windows (MSYS2 UCRT64 shell)
+make app RELEASE=1
 powershell -File scripts/package-release.ps1 windows v1.0.0
-# -> dist/bank-account-windows-v1.0.0.zip
+# -> dist/bank-account-windows-v1.0.0.zip  (contains just BankAccount.exe)
 ```
 
-**Automated GitHub Releases:** push a version tag (e.g. `v1.0.0`) or run the **Build Release** workflow manually. It builds on `macos-latest` and `windows-latest`, then uploads both zip files to a GitHub Release when a `v*` tag is pushed.
+**Automated GitHub Releases:** push a version tag (e.g. `v1.0.0`) or run the
+**Build Release** workflow manually. It builds on `macos-latest` and
+`windows-latest`, then uploads both zip files to a GitHub Release when a `v*`
+tag is pushed.
 
-| Platform | GUI | Notes |
-|----------|-----|-------|
-| **macOS** | `account_gui` (WebKit — same as web UI) | Recommended |
-| **Windows** | `account_gui.exe` (FLTK) | Receipt-style native window |
-| **Both** | `account_web` / `account` | Browser UI or terminal |
+| Platform | Application | UI |
+|----------|-------------|-----|
+| **macOS** | `BankAccount` | WebKit window (embedded HTML/CSS) |
+| **Windows** | `BankAccount.exe` | FLTK receipt-style window |
 
-Each zip includes `web/` (required for GUI and web server). Extract and run from that folder.
+Editing the UI: change the files in `web/` and rebuild — they are re-embedded
+into the executable automatically.
 
 ---
 
-**Native GUI** (recommended — exact HTML/CSS look in a desktop window):
+#### Optional extra front-ends
+
+These are not part of the default build, but are still available:
 
 ```bash
-make gui
-make run
-```
-
-Opens `bin/account_gui`, a standalone macOS window that embeds the same `web/` UI you see in the browser (pixel-identical). Edit `web/index.html` and `web/styles.css` to change the look.
-
-**Web UI** (same design in your browser):
-
-```bash
-make web
-make run-web
-```
-
-**Terminal version** (original menu-driven app):
-
-```bash
-make cli
-make run-cli
-```
-
-**FLTK GUI** (optional native window):
-
-```bash
-make gui
-make run-gui
-```
-
-Build CLI + web:
-
-```bash
-make
+make web && make run-web   # same UI served in your browser at 127.0.0.1:8765
+make cli && make run-cli   # original terminal menu version
 ```
 
 ```bash

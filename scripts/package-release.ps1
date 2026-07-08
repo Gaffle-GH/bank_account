@@ -10,6 +10,10 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $Root
 
+if ($Platform -ne "windows") {
+    throw "package-release.ps1 only supports windows packaging"
+}
+
 $Staging = Join-Path "dist" "bank-account-$Platform-$Version"
 $Archive = Join-Path "dist" "bank-account-$Platform-$Version.zip"
 
@@ -17,39 +21,30 @@ New-Item -ItemType Directory -Force -Path "dist" | Out-Null
 if (Test-Path $Staging) {
     Remove-Item -Recurse -Force $Staging
 }
-New-Item -ItemType Directory -Force -Path (Join-Path $Staging "web") | Out-Null
+New-Item -ItemType Directory -Force -Path $Staging | Out-Null
 
-if ($Platform -ne "windows") {
-    throw "package-release.ps1 only supports windows packaging"
+$App = "BankAccount.exe"
+$source = Join-Path "bin" $App
+if (-not (Test-Path $source)) {
+    throw "Missing $source - run 'make app' first"
 }
 
-foreach ($name in @("account.exe", "account_gui.exe", "account_web.exe")) {
-    $source = Join-Path "bin" $name
-    if (-not (Test-Path $source)) {
-        throw "Missing $source"
-    }
-    Copy-Item $source $Staging
-}
-
-Copy-Item "web/index.html", "web/styles.css", "web/app.js" (Join-Path $Staging "web")
+Copy-Item $source $Staging
 Copy-Item "LICENSE" $Staging
-Copy-Item "scripts/RUN.txt" $Staging -ErrorAction SilentlyContinue
-if (-not (Test-Path (Join-Path $Staging "RUN.txt"))) {
-    @"
-Bank Account Program
-====================
 
-Keep this folder together. The programs look for the web/ folder next to them.
+@"
+Bank Account
+============
+
+This is a single, self-contained application - the web UI is built in, so
+there are no extra files to keep alongside it.
 
 Windows
 -------
-  account_gui.exe   Native window (FLTK)
-  account_web.exe   Open http://127.0.0.1:8765 in your browser
-  account.exe       Terminal menu version
+  Double-click "BankAccount.exe".
 
-Account files are saved as NAME_accountINFOCARD.txt in this folder.
+Account data is saved as NAME_accountINFOCARD.txt next to the app.
 "@ | Set-Content -Path (Join-Path $Staging "RUN.txt") -Encoding UTF8
-}
 
 if (Test-Path $Archive) {
     Remove-Item -Force $Archive

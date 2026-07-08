@@ -7,14 +7,23 @@ ifeq ($(OS),Windows_NT)
 EXE_EXT := .exe
 endif
 
+# The single, self-contained application (native GUI with the web UI embedded).
+APP_TARGET = $(BIN_DIR)/BankAccount$(EXE_EXT)
+
+# Optional extra front-ends (not built by default).
 CLI_TARGET = $(BIN_DIR)/account$(EXE_EXT)
-GUI_TARGET = $(BIN_DIR)/account_gui$(EXE_EXT)
 WEB_TARGET = $(BIN_DIR)/account_web$(EXE_EXT)
 
 CORE_SRC = src/account.cc
 RUNTIME_SRC = src/web_runtime.cc
 CLI_SRC = src/main.cc
 WEB_SRC = src/web_server.cc
+
+# Web assets are embedded into the executable at build time.
+EMBED_TOOL = $(BIN_DIR)/embed_assets$(EXE_EXT)
+EMBED_SRC = tools/embed_assets.cc
+GEN_SRC = src/web_assets.generated.cc
+WEB_ASSETS = web/index.html web/styles.css web/app.js
 
 UNAME_S := $(shell uname -s 2>/dev/null)
 
@@ -47,47 +56,53 @@ else
 WEB_LDFLAGS =
 endif
 
-.PHONY: all cli gui web package-macos package-windows run run-cli run-gui run-web clean distclean
+.PHONY: all app cli web package-macos package-windows run run-app run-cli run-web clean distclean
 
-all: cli gui web
+all: app
+
+app: $(APP_TARGET)
 
 cli: $(CLI_TARGET)
 
-gui: $(GUI_TARGET)
-
 web: $(WEB_TARGET)
 
-package-macos: all
+package-macos: app
 	bash scripts/package-release.sh macos
 
-package-windows: all
+package-windows: app
 	powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1 windows
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
+$(EMBED_TOOL): $(EMBED_SRC) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) -o $(EMBED_TOOL) $(EMBED_SRC)
+
+$(GEN_SRC): $(EMBED_TOOL) $(WEB_ASSETS)
+	$(EMBED_TOOL) $(GEN_SRC) /index.html web/index.html /styles.css web/styles.css /app.js web/app.js
+
+$(APP_TARGET): $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(GUI_SRC) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(GUI_EXTRA_FLAGS) -o $(APP_TARGET) $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(GUI_SRC) $(GUI_EXTRA_LDFLAGS)
+
 $(CLI_TARGET): $(CORE_SRC) $(CLI_SRC) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -o $(CLI_TARGET) $(CORE_SRC) $(CLI_SRC)
 
-$(GUI_TARGET): $(CORE_SRC) $(RUNTIME_SRC) $(GUI_SRC) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(GUI_EXTRA_FLAGS) -o $(GUI_TARGET) $(CORE_SRC) $(RUNTIME_SRC) $(GUI_SRC) $(GUI_EXTRA_LDFLAGS)
+$(WEB_TARGET): $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(WEB_SRC) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) -o $(WEB_TARGET) $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(WEB_SRC) $(WEB_LDFLAGS)
 
-$(WEB_TARGET): $(CORE_SRC) $(RUNTIME_SRC) $(WEB_SRC) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) -o $(WEB_TARGET) $(CORE_SRC) $(RUNTIME_SRC) $(WEB_SRC) $(WEB_LDFLAGS)
+run: run-app
 
-run: run-gui
+run-app: $(APP_TARGET)
+	./$(APP_TARGET)
 
 run-cli: $(CLI_TARGET)
 	./$(CLI_TARGET)
-
-run-gui: $(GUI_TARGET)
-	./$(GUI_TARGET)
 
 run-web: $(WEB_TARGET)
 	./$(WEB_TARGET)
 
 clean:
-	rm -f $(CLI_TARGET) $(GUI_TARGET) $(WEB_TARGET)
+	rm -f $(APP_TARGET) $(CLI_TARGET) $(WEB_TARGET) $(EMBED_TOOL) $(GEN_SRC)
 
 distclean: clean
 	rm -rf dist

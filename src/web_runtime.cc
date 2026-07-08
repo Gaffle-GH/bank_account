@@ -1,6 +1,7 @@
 #include "web_runtime.h"
 
 #include "platform_socket.h"
+#include "web_assets.h"
 
 #include <atomic>
 #include <fstream>
@@ -190,7 +191,7 @@ string handleRequest(const string& method, const string& path, const string& bod
                "Access-Control-Allow-Headers: Content-Type\r\nConnection: close\r\n\r\n";
     }
 
-    if (method == "GET")
+    if (method == "GET" && path.rfind("/api/", 0) != 0)
     {
         string filePath = path;
         if (filePath == "/" || filePath == "/index.html")
@@ -198,8 +199,17 @@ string handleRequest(const string& method, const string& path, const string& bod
             filePath = "/index.html";
         }
 
-        string diskPath = g_webRoot + filePath;
-        string fileBody = readFile(diskPath);
+        // Prefer files on disk (for live-editing during development), then
+        // fall back to the assets embedded in the executable.
+        string fileBody;
+        if (!g_webRoot.empty())
+        {
+            fileBody = readFile(g_webRoot + filePath);
+        }
+        if (fileBody.empty())
+        {
+            web_asset_get(filePath, fileBody);
+        }
         if (fileBody.empty())
         {
             return httpResponse(404, "Not Found", "{\"error\":\"Not found\"}", "application/json");
@@ -436,7 +446,10 @@ bool web_resolve_root(string& root_out)
             return true;
         }
     }
-    return fileExists(root_out + "/index.html");
+    // No web/ folder on disk — the UI is embedded in the executable, so serve
+    // from there instead. An empty root signals "use embedded assets only".
+    root_out.clear();
+    return true;
 }
 
 bool web_start_server(const string& web_root, int port)
