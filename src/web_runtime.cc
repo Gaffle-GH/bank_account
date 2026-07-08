@@ -1,9 +1,6 @@
 #include "web_runtime.h"
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "platform_socket.h"
 
 #include <atomic>
 #include <fstream>
@@ -20,7 +17,7 @@ using namespace std;
 namespace
 {
 atomic<bool> g_running{false};
-int g_serverFd = -1;
+socket_t g_serverFd = kInvalidSocket;
 string g_webRoot = "web";
 
 unique_ptr<account> activeAccount;
@@ -338,7 +335,7 @@ string decodeChunkedBody(const string& chunked)
     return body;
 }
 
-string readHttpRequest(int client)
+string readHttpRequest(socket_t client)
 {
     string raw;
     char buffer[4096];
@@ -347,7 +344,7 @@ string readHttpRequest(int client)
 
     while (true)
     {
-        const ssize_t bytes = read(client, buffer, sizeof(buffer));
+        const int bytes = socket_read(client, buffer, sizeof(buffer));
         if (bytes <= 0)
         {
             break;
@@ -391,12 +388,12 @@ string readHttpRequest(int client)
     return raw;
 }
 
-void serveClient(int client)
+void serveClient(socket_t client)
 {
     const string raw = readHttpRequest(client);
     if (raw.empty())
     {
-        close(client);
+        socket_close(client);
         return;
     }
 
@@ -423,8 +420,8 @@ void serveClient(int client)
     }
 
     string response = handleRequest(method, path, body);
-    write(client, response.c_str(), response.size());
-    close(client);
+    socket_write(client, response.c_str(), static_cast<int>(response.size()));
+    socket_close(client);
 }
 } // namespace
 
@@ -444,17 +441,22 @@ bool web_resolve_root(string& root_out)
 
 bool web_start_server(const string& web_root, int port)
 {
+    platform_socket_init();
     g_webRoot = web_root;
     g_running = true;
 
     g_serverFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (g_serverFd < 0)
+    if (g_serverFd == kInvalidSocket)
     {
         return false;
     }
 
     int opt = 1;
+#ifdef _WIN32
+    setsockopt(g_serverFd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&opt), sizeof(opt));
+#else
     setsockopt(g_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
 
     sockaddr_in address{};
     address.sin_family = AF_INET;
@@ -463,32 +465,32 @@ bool web_start_server(const string& web_root, int port)
 
     if (::bind(g_serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0)
     {
-        close(g_serverFd);
-        g_serverFd = -1;
+        socket_close(g_serverFd);
+        g_serverFd = kInvalidSocket;
         return false;
     }
 
     if (listen(g_serverFd, 8) < 0)
     {
-        close(g_serverFd);
-        g_serverFd = -1;
+        socket_close(g_serverFd);
+        g_serverFd = kInvalidSocket;
         return false;
     }
 
     while (g_running)
     {
-        int client = accept(g_serverFd, nullptr, nullptr);
-        if (client < 0)
+        socket_t client = accept(g_serverFd, nullptr, nullptr);
+        if (client == kInvalidSocket)
         {
             break;
         }
         serveClient(client);
     }
 
-    if (g_serverFd >= 0)
+    if (g_serverFd != kInvalidSocket)
     {
-        close(g_serverFd);
-        g_serverFd = -1;
+        socket_close(g_serverFd);
+        g_serverFd = kInvalidSocket;
     }
 
     return true;
@@ -497,10 +499,13 @@ bool web_start_server(const string& web_root, int port)
 void web_stop_server()
 {
     g_running = false;
-    if (g_serverFd >= 0)
+    if (g_serverFd != kInvalidSocket)
     {
-        shutdown(g_serverFd, SHUT_RDWR);
-        close(g_serverFd);
-        g_serverFd = -1;
+        socket_shutdown(g_serverFd);
+        socket_close(g_serverFd);
+        g_serverFd = kInvalidSocket;
     }
+#ifdef _WIN32
+    platform_socket_shutdown();
+#endif
 }

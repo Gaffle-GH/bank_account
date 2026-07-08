@@ -1,0 +1,96 @@
+name: Build Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: make all
+
+      - name: Package
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION//\//-}"
+          bash scripts/package-release.sh macos "$VERSION"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bank-account-macos
+          path: dist/*.zip
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msys2_location: C:\msys64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-fltk
+            make
+
+      - name: Build
+        run: |
+          export FLTK_CONFIG=/mingw64/bin/fltk-config
+          make all RELEASE=1
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '/', '-'
+          ./scripts/package-release.ps1 windows $version
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bank-account-windows
+          path: dist/*.zip
+
+  release:
+    needs: [build-macos, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download macOS build
+        uses: actions/download-artifact@v4
+        with:
+          name: bank-account-macos
+          path: dist
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: bank-account-windows
+          path: dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

@@ -15,6 +15,33 @@
 
 ### Build / Run / Clean:
 
+**Release packages** (Mac + Windows zip files for GitHub Releases):
+
+```bash
+# macOS (build locally)
+make all
+bash scripts/package-release.sh macos v1.0.0
+# -> dist/bank-account-macos-v1.0.0.zip
+
+# Windows (MSYS2 MinGW shell)
+export FLTK_CONFIG=/mingw64/bin/fltk-config
+make all RELEASE=1
+powershell -File scripts/package-release.ps1 windows v1.0.0
+# -> dist/bank-account-windows-v1.0.0.zip
+```
+
+**Automated GitHub Releases:** push a version tag (e.g. `v1.0.0`) or run the **Build Release** workflow manually. It builds on `macos-latest` and `windows-latest`, then uploads both zip files to a GitHub Release when a `v*` tag is pushed.
+
+| Platform | GUI | Notes |
+|----------|-----|-------|
+| **macOS** | `account_gui` (WebKit — same as web UI) | Recommended |
+| **Windows** | `account_gui.exe` (FLTK) | Receipt-style native window |
+| **Both** | `account_web` / `account` | Browser UI or terminal |
+
+Each zip includes `web/` (required for GUI and web server). Extract and run from that folder.
+
+---
+
 **Native GUI** (recommended — exact HTML/CSS look in a desktop window):
 
 ```bash
