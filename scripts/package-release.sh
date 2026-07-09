@@ -68,6 +68,12 @@ Account data is saved into the folder you choose on the login screen
 (blank = your Home folder), as NAME_accountINFOCARD.txt.
 EOF
 
+  # Ad-hoc sign so the app bundle has a code signature.
+  # (Not notarized; this just prevents "unsigned bundle" issues.)
+  if command -v codesign >/dev/null 2>&1; then
+    codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 || true
+  fi
+
 elif [[ "$PLATFORM" == "windows" ]]; then
   APP="BankAccount.exe"
   if [[ ! -f "bin/${APP}" ]]; then
@@ -94,9 +100,15 @@ else
 fi
 
 rm -f "$ARCHIVE"
-(
-  cd dist
-  zip -r "$(basename "$ARCHIVE")" "$(basename "$STAGING")"
-)
+if [[ "$PLATFORM" == "macos" ]]; then
+  # Use ditto for .app bundles; plain zip can produce bundles that Gatekeeper
+  # reports as damaged after download/extract.
+  ditto -c -k --sequesterRsrc --keepParent "$STAGING" "$ARCHIVE"
+else
+  (
+    cd dist
+    zip -r "$(basename "$ARCHIVE")" "$(basename "$STAGING")"
+  )
+fi
 
 echo "Created $ARCHIVE"
