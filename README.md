@@ -42,12 +42,12 @@ powershell -File scripts/package-release.ps1 windows v1.0.0
 
 **MACOS File Compatibility**
 
-Apple Compatibility Issues will happen because of the Apple Developer ID Signing.
+Apple Compatibility Issues can occur due to No Apple Developer ID Signing.
 The only way to bypass this is to quarantine the application, using the following line in the terminal.
 ```bash
 xattr -dr com.apple.quarantine ~/path_to_file/BankAccount.app
 ```
-Note: You must do this whenever there's a new update to the application, and the application is also open source, so if you're fearful of viruses or malware, you can check the source code here.
+Note: You must do this whenever there's a new update to the application. The application is also open source, so if you're concerned about viruses or malware, you can check the source code here.
 
 **Automated GitHub Releases:** push a version tag (e.g. `v1.0.0`) or run the
 **Build Release** workflow manually. It builds on `macos-latest` and
@@ -131,4 +131,8 @@ automatically.
 Linux builds (and manual fallback) can still use the older FLTK UI in
 `src/gui_main.cc`. It is not the default desktop app on macOS or Windows.
 
+## Application Images / Output File
+<img width="360" height="419" alt="Screenshot 2026-07-10 at 10 43 14 PM" src="https://github.com/user-attachments/assets/68498983-1578-4617-ba1d-9e1817a93b24" />
+<img width="644" height="390" alt="Screenshot 2026-07-10 at 10 40 36 PM" src="https://github.com/user-attachments/assets/82050c2b-0119-4853-aef7-b1c45ae087ab" />
+<img width="363" height="921" alt="Screenshot 2026-07-10 at 10 40 10 PM" src="https://github.com/user-attachments/assets/53ec4194-6b83-48cc-af84-63bb1378d7c9" />
 
