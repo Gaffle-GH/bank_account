@@ -1,4 +1,4 @@
-# <p align="center"> Bank Account Management  🧮</p>
+# <p align="center"> Bank Account Management</p>
 
 ## Description
 **C++** Project that demonstrates Banking Account Management. 
