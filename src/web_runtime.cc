@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -68,6 +69,85 @@ string resolveDataDir(string dir)
         return homeDir() + dir.substr(1);
     }
     return dir;
+}
+
+string shellEscape(const string& value)
+{
+    string out = "\"";
+    for (char c : value)
+    {
+        if (c == '"' || c == '\\')
+        {
+            out += '\\';
+        }
+        out += c;
+    }
+    out += '"';
+    return out;
+}
+
+bool openPathInFileManager(const string& filePath)
+{
+    if (filePath.empty())
+    {
+        return false;
+    }
+
+    string target = filePath;
+    if (!std::filesystem::exists(target))
+    {
+        const std::filesystem::path parent = std::filesystem::path(filePath).parent_path();
+        if (parent.empty())
+        {
+            return false;
+        }
+        target = parent.string();
+    }
+
+#ifdef _WIN32
+    if (std::filesystem::exists(filePath))
+    {
+        const string cmd = "explorer /select," + shellEscape(filePath);
+        return std::system(cmd.c_str()) == 0;
+    }
+    const string cmd = "explorer " + shellEscape(target);
+    return std::system(cmd.c_str()) == 0;
+#elif defined(__APPLE__)
+    if (std::filesystem::exists(filePath))
+    {
+        const string cmd = "open -R " + shellEscape(filePath);
+        std::system(cmd.c_str());
+    }
+    else
+    {
+        const string cmd = "open " + shellEscape(target);
+        std::system(cmd.c_str());
+    }
+    return true;
+#else
+    const string cmd = "xdg-open " + shellEscape(target);
+    return std::system(cmd.c_str()) == 0;
+#endif
+}
+
+bool openDirInFileManager(const string& dirPath)
+{
+    if (dirPath.empty())
+    {
+        return false;
+    }
+
+#ifdef _WIN32
+    const string cmd = "explorer " + shellEscape(dirPath);
+    std::system(cmd.c_str());
+#elif defined(__APPLE__)
+    const string cmd = "open " + shellEscape(dirPath);
+    std::system(cmd.c_str());
+#else
+    const string cmd = "xdg-open " + shellEscape(dirPath);
+    std::system(cmd.c_str());
+#endif
+    return true;
 }
 
 string readFile(const string& path)
@@ -318,6 +398,27 @@ string handleRequest(const string& method, const string& path, const string& bod
         ostringstream json;
         json << "{\"message\":\"" << jsonEscape(msg) << "\"}";
         return httpResponse(200, "OK", json.str(), "application/json");
+    }
+
+    if (method == "POST" && path == "/api/open-dir")
+    {
+        string dir = resolveDataDir(extractJsonString(body, "dir"));
+        if (!openDirInFileManager(dir))
+        {
+            return httpResponse(500, "Server Error", "{\"error\":\"Could not open folder\"}", "application/json");
+        }
+        return httpResponse(200, "OK", "{\"ok\":true}", "application/json");
+    }
+
+    if (method == "POST" && path == "/api/open-file")
+    {
+        const string filePath = activeAccount->getFilePath();
+        if (!openPathInFileManager(filePath))
+        {
+            return httpResponse(500, "Server Error", "{\"error\":\"Could not open file location\"}",
+                                "application/json");
+        }
+        return httpResponse(200, "OK", "{\"ok\":true}", "application/json");
     }
 
     if (method == "POST" && path == "/api/quit")

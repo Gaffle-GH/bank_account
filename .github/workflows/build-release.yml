@@ -52,8 +52,11 @@ jobs:
           update: true
           install: >-
             mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-fltk
             make
+
+      - name: Fetch WebView2 SDK
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File scripts/fetch-webview2.ps1
 
       - name: Build
         run: make app RELEASE=1

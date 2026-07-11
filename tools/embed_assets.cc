@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         ss << in.rdbuf();
         const std::string data = ss.str();
 
-        out << "const char kAsset" << index << "[] = {";
+        out << "const unsigned char kAsset" << index << "[] = {";
         for (std::size_t j = 0; j < data.size(); ++j)
         {
             if (j % 20 == 0)
@@ -73,8 +73,8 @@ int main(int argc, char** argv)
     out << "    static const std::unordered_map<std::string, std::string> table = {\n";
     for (const Entry& e : entries)
     {
-        out << "        {\"" << e.route << "\", std::string(kAsset" << e.index
-            << ", sizeof(kAsset" << e.index << "))},\n";
+        out << "        {\"" << e.route << "\", std::string(reinterpret_cast<const char*>(kAsset" << e.index
+            << "), sizeof(kAsset" << e.index << "))},\n";
     }
     out << "    };\n";
     out << "    auto it = table.find(route);\n";

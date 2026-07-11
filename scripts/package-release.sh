@@ -81,6 +81,9 @@ elif [[ "$PLATFORM" == "windows" ]]; then
     exit 1
   fi
   cp "bin/${APP}" "$STAGING/"
+  if [[ -f "bin/WebView2Loader.dll" ]]; then
+    cp "bin/WebView2Loader.dll" "$STAGING/"
+  fi
   cp LICENSE "$STAGING/"
 
   cat > "$STAGING/RUN.txt" <<'EOF'
@@ -88,6 +91,7 @@ Bank Account (Windows)
 ======================
 
 Double-click "BankAccount.exe" — it opens a window, no console required.
+Keep "WebView2Loader.dll" in the same folder as the executable.
 
 The web UI is built into the app, so there are no extra files to keep with it.
 Account data is saved into the folder you choose on the login screen

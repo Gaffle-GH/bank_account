@@ -17,13 +17,16 @@
 
 @interface NativeBridge : NSObject <WKScriptMessageHandler>
 @property(assign) NSApplication* app;
+@property(assign) WKWebView* webView;
 @end
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate>
 @property(strong) NSWindow* window;
 @property(strong) WKWebView* webView;
 @property(strong) NativeBridge* bridge;
-- (void)setLockedContentSize:(NSSize)size;
+@property(assign) BOOL userDidResizeWindow;
+- (void)setPreferredContentSize:(NSSize)size fit:(BOOL)fit;
+- (void)showFolderPickerStartingAt:(NSString*)startPath;
 @end
 
 @implementation NativeBridge
@@ -49,16 +52,58 @@
     if ([body hasPrefix:@"resize:"])
     {
         NSArray<NSString*>* parts = [[body substringFromIndex:7] componentsSeparatedByString:@","];
-        if (parts.count == 2)
+        if (parts.count >= 2)
         {
             const CGFloat width = [parts[0] doubleValue];
             const CGFloat height = [parts[1] doubleValue];
             if (width > 0 && height > 0)
             {
+                const BOOL forceFit = parts.count >= 3 && [parts[2] isEqualToString:@"fit"];
                 AppDelegate* delegate = (AppDelegate*)self.app.delegate;
-                [delegate setLockedContentSize:NSMakeSize(width, height)];
+                [delegate setPreferredContentSize:NSMakeSize(width, height) fit:forceFit];
             }
         }
+        return;
+    }
+
+    if ([body hasPrefix:@"openFile:"])
+    {
+        NSString* path = [body substringFromIndex:9];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSFileManager* fm = [NSFileManager defaultManager];
+            if ([fm fileExistsAtPath:path])
+            {
+                [[NSWorkspace sharedWorkspace] selectFile:path
+                                 inFileViewerRootedAtPath:[path stringByDeletingLastPathComponent]];
+            }
+            else
+            {
+                NSString* dir = [path stringByDeletingLastPathComponent];
+                NSURL* url = [NSURL fileURLWithPath:dir isDirectory:YES];
+                [[NSWorkspace sharedWorkspace] openURL:url];
+            }
+        });
+        return;
+    }
+
+    if ([body hasPrefix:@"openDir:"])
+    {
+        NSString* path = [body substringFromIndex:8];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSString* resolved = path.length > 0 ? [path stringByExpandingTildeInPath] : NSHomeDirectory();
+            NSURL* url = [NSURL fileURLWithPath:resolved isDirectory:YES];
+            [[NSWorkspace sharedWorkspace] openURL:url];
+        });
+        return;
+    }
+
+    if ([body isEqualToString:@"pickDir"] || [body hasPrefix:@"pickDir:"])
+    {
+        NSString* startPath = [body hasPrefix:@"pickDir:"] ? [body substringFromIndex:8] : @"";
+        dispatch_async(dispatch_get_main_queue(), ^{
+            AppDelegate* delegate = (AppDelegate*)self.app.delegate;
+            [delegate showFolderPickerStartingAt:startPath];
+        });
     }
 }
 @end
@@ -66,19 +111,111 @@
 @implementation AppDelegate
 
 static constexpr CGFloat kLoginWidth = 360;
-static constexpr CGFloat kLoginHeight = 190;
+static constexpr CGFloat kLoginHeight = 400;
+static constexpr CGFloat kMinWidth = 320;
+static constexpr CGFloat kMinHeight = 300;
 
-- (void)setLockedContentSize:(NSSize)size
+- (void)setPreferredContentSize:(NSSize)size fit:(BOOL)fit
 {
     if (self.window == nil)
     {
         return;
     }
 
-    [self.window setContentSize:size];
-    [self.window setMinSize:size];
-    [self.window setMaxSize:size];
-    [self.window center];
+    if (fit || !self.userDidResizeWindow)
+    {
+        [self.window setContentSize:size];
+        [self resetWebViewScrollPosition];
+        if (fit)
+        {
+            self.userDidResizeWindow = NO;
+        }
+    }
+    [self.window setMinSize:NSMakeSize(kMinWidth, kMinHeight)];
+}
+
+- (void)resetWebViewScrollPosition
+{
+    if (self.webView == nil)
+    {
+        return;
+    }
+
+    if (NSScrollView* scrollView = self.webView.enclosingScrollView)
+    {
+        [scrollView.contentView scrollToPoint:NSMakePoint(0, 0)];
+        [scrollView reflectScrolledClipView:scrollView.contentView];
+        scrollView.contentInsets = NSEdgeInsetsZero;
+        scrollView.scrollerInsets = NSEdgeInsetsZero;
+    }
+
+    [self.webView evaluateJavaScript:
+        @"window.scrollTo(0, 0);"
+        "document.documentElement.scrollTop = 0;"
+        "document.body.scrollTop = 0;"
+        "document.documentElement.style.overflow = 'hidden';"
+        "document.body.style.overflow = 'hidden';"
+                   completionHandler:nil];
+}
+
+- (void)showFolderPickerStartingAt:(NSString*)startPath
+{
+    if (self.webView == nil)
+    {
+        return;
+    }
+
+    NSOpenPanel* panel = [NSOpenPanel openPanel];
+    panel.canChooseDirectories = YES;
+    panel.canChooseFiles = NO;
+    panel.allowsMultipleSelection = NO;
+    panel.canCreateDirectories = YES;
+    panel.prompt = @"Choose";
+    panel.message = @"Choose the folder where the account file will be saved.";
+
+    NSString* resolved = startPath.length > 0 ? [startPath stringByExpandingTildeInPath] : NSHomeDirectory();
+    NSFileManager* fm = [NSFileManager defaultManager];
+    BOOL isDir = NO;
+    if ([fm fileExistsAtPath:resolved isDirectory:&isDir] && isDir)
+    {
+        panel.directoryURL = [NSURL fileURLWithPath:resolved isDirectory:YES];
+    }
+    else
+    {
+        NSString* parent = [resolved stringByDeletingLastPathComponent];
+        if (parent.length > 0 && [fm fileExistsAtPath:parent isDirectory:&isDir] && isDir)
+        {
+            panel.directoryURL = [NSURL fileURLWithPath:parent isDirectory:YES];
+        }
+    }
+
+    [NSApp activateIgnoringOtherApps:YES];
+    if ([panel runModal] != NSModalResponseOK)
+    {
+        return;
+    }
+
+    NSString* chosen = panel.URL.path;
+    if (chosen.length == 0)
+    {
+        return;
+    }
+
+    NSError* error = nil;
+    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:chosen
+                                                       options:NSJSONWritingFragmentsAllowed
+                                                         error:&error];
+    if (jsonData == nil || error != nil)
+    {
+        return;
+    }
+
+    NSString* jsonPath = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    NSString* script = [NSString stringWithFormat:@"window.__setLoginDir(%@)", jsonPath];
+    [self.webView evaluateJavaScript:script completionHandler:^(id, NSError*) {
+        [self.webView evaluateJavaScript:@"window.syncNativeWindowSize && window.syncNativeWindowSize({ fit: true })"
+                       completionHandler:nil];
+    }];
 }
 
 - (void)focusWebView
@@ -129,19 +266,21 @@ static constexpr CGFloat kLoginHeight = 190;
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-    const NSSize lockedSize = NSMakeSize(kLoginWidth, kLoginHeight);
+    const NSSize initialSize = NSMakeSize(kLoginWidth, kLoginHeight);
     NSRect frame = NSMakeRect(0, 0, kLoginWidth, kLoginHeight);
 
     self.window = [[NSWindow alloc] initWithContentRect:frame
                                               styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
-                                                        NSWindowStyleMaskMiniaturizable
+                                                        NSWindowStyleMaskMiniaturizable |
+                                                        NSWindowStyleMaskResizable |
+                                                        NSWindowStyleMaskFullScreen
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
     [self.window setTitle:@"Account Program"];
-    [self.window setContentSize:lockedSize];
-    [self.window setMinSize:lockedSize];
-    [self.window setMaxSize:lockedSize];
+    [self.window setContentSize:initialSize];
+    [self.window setMinSize:NSMakeSize(kMinWidth, kMinHeight)];
     [self.window setDelegate:self];
+    self.userDidResizeWindow = NO;
 
     WKWebViewConfiguration* config = [[WKWebViewConfiguration alloc] init];
     self.bridge = [[NativeBridge alloc] init];
@@ -149,6 +288,7 @@ static constexpr CGFloat kLoginHeight = 190;
     [config.userContentController addScriptMessageHandler:self.bridge name:@"native"];
 
     self.webView = [[WKWebView alloc] initWithFrame:self.window.contentView.bounds configuration:config];
+    self.bridge.webView = self.webView;
     self.webView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     self.webView.navigationDelegate = self;
     [self.window.contentView addSubview:self.webView];
@@ -161,6 +301,9 @@ static constexpr CGFloat kLoginHeight = 190;
         scrollView.horizontalScrollElasticity = NSScrollElasticityNone;
         scrollView.borderType = NSNoBorder;
         scrollView.drawsBackground = NO;
+        scrollView.autohidesScrollers = YES;
+        scrollView.contentInsets = NSEdgeInsetsZero;
+        scrollView.scrollerInsets = NSEdgeInsetsZero;
     }
 
     [self.webView setValue:@NO forKey:@"drawsBackground"];
@@ -170,6 +313,13 @@ static constexpr CGFloat kLoginHeight = 190;
 
     [self.window center];
     [self focusWebView];
+}
+
+- (void)windowDidResize:(NSNotification*)notification
+{
+    (void)notification;
+    self.userDidResizeWindow = YES;
+    [self resetWebViewScrollPosition];
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification
@@ -183,8 +333,13 @@ static constexpr CGFloat kLoginHeight = 190;
     (void)webView;
     (void)navigation;
     [self focusWebView];
+    [self resetWebViewScrollPosition];
     [self.webView evaluateJavaScript:@"document.getElementById('login-name')?.focus()"
                    completionHandler:nil];
+    [self.webView evaluateJavaScript:@"window.syncNativeWindowSize && window.syncNativeWindowSize({ fit: true })"
+                   completionHandler:^(id, NSError*) {
+                       [self resetWebViewScrollPosition];
+                   }];
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender

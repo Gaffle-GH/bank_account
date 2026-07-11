@@ -43,6 +43,14 @@ ifeq ($(UNAME_S),Darwin)
 GUI_SRC = src/gui_webview.mm
 GUI_EXTRA_FLAGS =
 GUI_EXTRA_LDFLAGS = -framework Cocoa -framework WebKit
+else ifeq ($(OS),Windows_NT)
+WEBVIEW2_PKG := $(firstword $(wildcard deps/Microsoft.Web.WebView2.*))
+ifeq ($(WEBVIEW2_PKG),)
+WEBVIEW2_PKG = deps/Microsoft.Web.WebView2
+endif
+GUI_SRC = src/gui_webview_win.cc
+GUI_EXTRA_FLAGS = -I$(WEBVIEW2_PKG)/build/native/include
+GUI_EXTRA_LDFLAGS = -lws2_32 -mwindows -lole32 -lshell32 -lshlwapi -luuid -luser32 -lgdi32
 else
 GUI_SRC = src/gui_main.cc
 GUI_EXTRA_FLAGS = $(FLTK_CXXFLAGS)
@@ -50,8 +58,11 @@ GUI_EXTRA_LDFLAGS = $(FLTK_LDFLAGS)
 endif
 
 ifeq ($(OS),Windows_NT)
-# -mwindows builds a GUI-subsystem app so no console window pops up.
+ifeq ($(GUI_SRC),src/gui_webview_win.cc)
+# GUI subsystem flags already set above.
+else
 GUI_EXTRA_LDFLAGS += -lws2_32 -mwindows
+endif
 WEB_LDFLAGS = -lws2_32
 else
 WEB_LDFLAGS =
@@ -84,6 +95,16 @@ $(GEN_SRC): $(EMBED_TOOL) $(WEB_ASSETS)
 
 $(APP_TARGET): $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(GUI_SRC) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(GUI_EXTRA_FLAGS) -o $(APP_TARGET) $(CORE_SRC) $(RUNTIME_SRC) $(GEN_SRC) $(GUI_SRC) $(GUI_EXTRA_LDFLAGS)
+
+ifeq ($(OS),Windows_NT)
+ifeq ($(GUI_SRC),src/gui_webview_win.cc)
+.PHONY: fetch-webview2
+fetch-webview2:
+	powershell -ExecutionPolicy Bypass -File scripts/fetch-webview2.ps1
+
+$(APP_TARGET): fetch-webview2
+endif
+endif
 
 $(CLI_TARGET): $(CORE_SRC) $(CLI_SRC) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -o $(CLI_TARGET) $(CORE_SRC) $(CLI_SRC)

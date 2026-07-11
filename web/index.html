@@ -9,67 +9,92 @@
 <body class="login-active">
   <div id="login-screen" class="page">
     <article class="receipt">
-      <header class="receipt-head">
+      <header class="receipt-head receipt-head-compact">
         <p class="store">ACCOUNT PROGRAM</p>
         <p class="tagline">Client access terminal</p>
-        <p class="receipt-code">TERMINAL 04  /  SESSION OPEN</p>
       </header>
-      <hr class="rule" />
 
-      <p class="section-title">New session</p>
-      <label class="label" for="login-name">Insert Name for the Account</label>
-      <input id="login-name" type="text" value="exampleAccount" autofocus />
-      <label class="label" for="login-dir">Save/Load Folder (blank = Home folder)</label>
-      <input id="login-dir" type="text" inputmode="text" placeholder="~/Documents" autocomplete="off" />
-      <button id="login-btn" class="btn">Continue</button>
-      <p id="login-status" class="status"></p>
+      <div class="receipt-body login-body">
+        <section class="card">
+          <p class="card-label">New session</p>
+          <label class="label" for="login-name">Account name</label>
+          <input id="login-name" type="text" value="exampleAccount" autofocus />
+        </section>
 
-      <footer class="receipt-foot">
-        <p>Retain for your records</p>
-      </footer>
+        <section class="card card-storage">
+          <p class="card-label">Save / load location</p>
+          <p class="field-hint">Leave blank to use your Home folder, or choose a folder below</p>
+          <input id="login-dir" class="path-input" type="text" inputmode="text" placeholder="~/Documents" autocomplete="off" />
+          <button type="button" id="login-pick-dir" class="storage-btn" aria-label="Choose save folder">
+            <span class="storage-icon" aria-hidden="true"></span>
+            <span class="storage-btn-copy">
+              <span class="storage-btn-label">Folder</span>
+              <span id="login-dir-preview" class="storage-btn-path">Home folder</span>
+            </span>
+            <span id="login-pick-dir-label" class="storage-btn-action">Choose folder</span>
+          </button>
+          <button type="button" id="login-open-dir" class="btn-link">Open in Finder</button>
+        </section>
+
+        <button id="login-btn" class="btn">Continue</button>
+        <p id="login-status" class="status"></p>
+      </div>
     </article>
   </div>
 
   <div id="app-screen" class="page hidden">
     <article class="receipt">
-      <header class="receipt-head">
+      <header class="receipt-head receipt-head-compact">
         <p class="store">ACCOUNT PROGRAM</p>
         <p class="tagline">Transaction receipt</p>
         <p class="receipt-code">BANK LEDGER  /  LIVE ACCOUNT</p>
       </header>
-      <hr class="rule" />
 
-      <p id="account-title" class="line center">Account Display</p>
-      <p id="subtitle" class="line center muted"></p>
-      <p id="file-path" class="line center muted file-path"></p>
-      <hr class="rule" />
+      <div class="receipt-body">
+        <section class="card card-account">
+          <p class="card-label">Account</p>
+          <p id="account-title" class="card-title">Account Display</p>
+          <div class="account-status">
+            <button type="button" id="file-path" class="storage-btn hidden" aria-label="Open save file location">
+              <span class="storage-icon storage-icon-file" aria-hidden="true"></span>
+              <span class="storage-btn-copy">
+                <span class="storage-btn-label">Save file</span>
+                <span class="file-path-text"></span>
+              </span>
+              <span class="file-path-action">Open location</span>
+            </button>
+          </div>
+        </section>
 
-      <div class="row total">
-        <span>Current Balance</span>
-        <strong id="balance">$0.00</strong>
+        <section class="card card-balance">
+          <p class="card-label">Current Balance</p>
+          <p id="balance" class="balance-amount">$0.00</p>
+        </section>
+
+        <section class="card card-actions">
+          <p class="card-label">Transactions</p>
+          <label class="label" for="amount">Enter Amount</label>
+          <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+
+          <div class="btn-group btn-group-split">
+            <button id="deposit-btn" class="btn">Deposit</button>
+            <button id="withdraw-btn" class="btn outline">Withdraw</button>
+          </div>
+        </section>
+
+        <section class="card card-history">
+          <p class="card-label">History</p>
+          <ul id="history" class="history"></ul>
+        </section>
+
+        <section class="card card-exit">
+          <button id="save-exit-btn" class="btn">Save and Exit</button>
+          <footer class="receipt-foot">
+            <p>Thank you for banking with us</p>
+            <p class="muted">*** END OF RECEIPT ***</p>
+          </footer>
+        </section>
       </div>
-      <hr class="rule" />
-
-      <p class="section-title">Options</p>
-      <label class="label" for="amount">Enter Amount</label>
-      <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
-
-      <div class="btn-group">
-        <button id="deposit-btn" class="btn">1. Deposit</button>
-        <button id="withdraw-btn" class="btn outline">2. Withdraw</button>
-      </div>
-
-      <hr class="rule" />
-      <p class="section-title">3. History</p>
-      <ul id="history" class="history"></ul>
-
-      <hr class="rule" />
-      <button id="save-exit-btn" class="btn">4. Save and Exit</button>
-
-      <footer class="receipt-foot">
-        <p>Thank you for banking with us</p>
-        <p class="muted">*** END OF RECEIPT ***</p>
-      </footer>
     </article>
   </div>
 

@@ -30,6 +30,10 @@ if (-not (Test-Path $source)) {
 }
 
 Copy-Item $source $Staging
+$loader = Join-Path "bin" "WebView2Loader.dll"
+if (Test-Path $loader) {
+    Copy-Item $loader $Staging
+}
 Copy-Item "LICENSE" $Staging
 
 @"
@@ -42,8 +46,10 @@ there are no extra files to keep alongside it.
 Windows
 -------
   Double-click "BankAccount.exe".
+  Keep "WebView2Loader.dll" in the same folder as the executable.
 
-Account data is saved as NAME_accountINFOCARD.txt next to the app.
+Account data is saved into the folder you choose on the login screen
+(blank = your Home folder), as NAME_accountINFOCARD.txt.
 "@ | Set-Content -Path (Join-Path $Staging "RUN.txt") -Encoding UTF8
 
 if (Test-Path $Archive) {
