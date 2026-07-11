@@ -430,14 +430,6 @@ public:
         g_controller->get_CoreWebView2(&g_webview);
         resizeWebView();
 
-        ICoreWebView2Controller2* controller2 = nullptr;
-        if (SUCCEEDED(g_controller->QueryInterface(IID_PPV_ARGS(&controller2))) && controller2 != nullptr)
-        {
-            COREWEBVIEW2_COLOR transparent{};
-            controller2->put_DefaultBackgroundColor(transparent);
-            controller2->Release();
-        }
-
         ICoreWebView2Settings* settings = nullptr;
         if (SUCCEEDED(g_webview->get_Settings(&settings)) && settings != nullptr)
         {

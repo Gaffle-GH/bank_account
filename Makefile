@@ -50,7 +50,7 @@ WEBVIEW2_PKG = deps/Microsoft.Web.WebView2
 endif
 GUI_SRC = src/gui_webview_win.cc
 GUI_EXTRA_FLAGS = -I$(WEBVIEW2_PKG)/build/native/include
-GUI_EXTRA_LDFLAGS = -lws2_32 -mwindows -lole32 -lshell32 -lshlwapi -luuid -luser32 -lgdi32
+GUI_EXTRA_LDFLAGS = -lws2_32 -mwindows -municode -lole32 -lshell32 -lshlwapi -luuid -luser32 -lgdi32
 else
 GUI_SRC = src/gui_main.cc
 GUI_EXTRA_FLAGS = $(FLTK_CXXFLAGS)
