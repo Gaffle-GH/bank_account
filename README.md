@@ -39,6 +39,15 @@ powershell -File scripts/package-release.ps1 windows v1.0.0
 # -> dist/bank-account-windows-v1.0.0.zip  (contains just BankAccount.exe)
 ```
 
+**MACOS File Compatibility**
+
+Apple Compatibility Issues will happen because of the Apple Developer ID Signing.
+The only way to bypass this is to quarantine the application, using the following line in the terminal.
+```bash
+xattr -dr com.apple.quarantine ~/path_to_file/BankAccount.app
+```
+Note: You must do this whenever there's a new update to the application, and the application is also open source, so if you're fearful of viruses or malware, you can check the source code here.
+
 **Automated GitHub Releases:** push a version tag (e.g. `v1.0.0`) or run the
 **Build Release** workflow manually. It builds on `macos-latest` and
 `windows-latest`, then uploads both zip files to a GitHub Release when a `v*`
