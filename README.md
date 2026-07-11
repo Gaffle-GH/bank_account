@@ -45,7 +45,7 @@ powershell -File scripts/package-release.ps1 windows v1.0.0
 Apple Compatibility Issues can occur due to No Apple Developer ID Signing.
 The only way to bypass this is to quarantine the application, using the following line in the terminal.
 ```bash
-xattr -dr com.apple.quarantine ~/path_to_file/BankAccount.app
+xattr -dr com.apple.quarantine BankAccount.app
 ```
 Note: You must do this whenever there's a new update to the application. The application is also open source, so if you're concerned about viruses or malware, you can check the source code here.
 
